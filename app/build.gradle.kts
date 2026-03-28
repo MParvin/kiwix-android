@@ -69,7 +69,7 @@ android {
   // Added namespace in response to Gradle 8.0 and above.
   // This is now specified in the Gradle configuration instead of declaring
   // it directly in the AndroidManifest file.
-  namespace = "me.mparvin.offwiki"
+  namespace = "org.kiwix.kiwixmobile"
   defaultConfig {
     resValue("string", "app_name", "OffWiki")
     resValue("string", "app_search_string", "Search OffWiki")
