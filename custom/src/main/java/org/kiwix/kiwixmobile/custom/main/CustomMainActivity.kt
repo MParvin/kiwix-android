@@ -50,6 +50,7 @@ import org.kiwix.kiwixmobile.custom.BuildConfig
 import org.kiwix.kiwixmobile.custom.CustomApp
 import org.kiwix.kiwixmobile.custom.R
 import org.kiwix.kiwixmobile.custom.customActivityComponent
+import org.kiwix.kiwixmobile.custom.main.CustomDestination
 
 class CustomMainActivity : CoreMainActivity() {
   override val mainActivity: AppCompatActivity by lazy { this }

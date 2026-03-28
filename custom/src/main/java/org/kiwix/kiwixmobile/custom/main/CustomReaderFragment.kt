@@ -54,6 +54,7 @@ import org.kiwix.kiwixmobile.core.utils.files.FileUtils.getDemoFilePathForCustom
 import org.kiwix.kiwixmobile.custom.BuildConfig
 import org.kiwix.kiwixmobile.custom.R
 import org.kiwix.kiwixmobile.custom.customActivityComponent
+import org.kiwix.kiwixmobile.custom.main.CustomDestination
 import org.kiwix.libkiwix.Book
 import java.io.File
 import java.util.Locale
