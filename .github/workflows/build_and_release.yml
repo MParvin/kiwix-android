@@ -50,10 +50,20 @@ jobs:
     - name: Build Release APK
       run: ./gradlew assembleRelease --stacktrace
 
-    # Get the tag name for release
-    - name: Get tag name
+    # Generate a version tag for the release
+    - name: Generate version tag
       id: tag_name
-      run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      run: |
+        SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
+        TAG_NAME="v$(date -u +'%Y%m%d')-${SHORT_SHA}"
+        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+        echo "🏷️ Generated tag: $TAG_NAME"
+
+    # Create the git tag
+    - name: Create git tag
+      run: |
+        git tag "${{ steps.tag_name.outputs.TAG_NAME }}"
+        git push origin "${{ steps.tag_name.outputs.TAG_NAME }}"
 
     # Find the built APK file
     - name: Find APK file
