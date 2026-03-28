@@ -1,6 +1,7 @@
 /*
- * Kiwix Android
- * Copyright (c) 2020 Kiwix <android.kiwix.org>
+ * OffWiki Android - Based on Kiwix Android  
+ * Copyright (c) 2024 Mohammad Parvin <m.parvin986@gmail.com>
+ * Original Kiwix Android Copyright (c) 2020 Kiwix <android.kiwix.org>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or

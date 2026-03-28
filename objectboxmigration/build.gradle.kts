@@ -22,7 +22,7 @@ plugins.apply(KiwixConfigurationPlugin::class)
 apply(plugin = "io.objectbox")
 
 android {
-  namespace = "org.kiwix.kiwixmobile.migration"
+  namespace = "me.mparvin.offwiki.migration"
 
   defaultConfig {
     minSdk = 25

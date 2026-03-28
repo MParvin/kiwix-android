@@ -23,7 +23,7 @@ plugins.apply(KiwixConfigurationPlugin::class)
 
 android {
   defaultConfig {
-    applicationId = "org.kiwix"
+    applicationId = "me.mparvin"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -34,7 +34,7 @@ android {
       // Added namespace for every custom app to make it compatible with gradle 8.0 and above.
       // This is now specified in the Gradle configuration instead of declaring
       // it directly in the AndroidManifest file.
-      namespace = "org.kiwix.kiwixmobile.custom"
+      namespace = "me.mparvin.offwiki.custom"
       File("$projectDir/src", "$name/$name.zim").let {
         createDownloadTask(it)
         createPublishApkWithExpansionTask(it, applicationVariants)
@@ -220,7 +220,7 @@ fun ProductFlavor.createPublishApkWithExpansionTask(
     group = "publishing"
     description = "Uploads $capitalizedName to the Play Console with an Expansion file"
     doLast {
-      val packageName = "org.kiwix$applicationIdSuffix"
+      val packageName = "me.mparvin$applicationIdSuffix"
       println("packageName $packageName")
       createPublisher(File(rootDir, "playstore.json"))
         .transactionWithCommit(packageName) {
@@ -251,7 +251,7 @@ fun ProductFlavor.createPublishBundleWithAssetPlayDelivery(): TaskProvider<Task>
     group = "publishing"
     description = "Uploads $capitalizedName to the Play Console with an Play Asset delivery mode"
     doLast {
-      val packageName = "org.kiwix$applicationIdSuffix"
+      val packageName = "me.mparvin$applicationIdSuffix"
       println("packageName $packageName")
       createPublisher(File(rootDir, "playstore.json"))
         .transactionWithCommit(packageName) {

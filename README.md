@@ -1,22 +1,14 @@
-<a href="https://play.google.com/store/apps/details?id=org.kiwix.kiwixmobile" target="_blank" align="left">
-  <img src="https://play.google.com/intl/en/badges/images/badge_new.png" alt="Get it on Google Play" height="30" />
-</a>
-<a href="https://apt.izzysoft.de/fdroid/index/apk/org.kiwix.kiwixmobile.standalone" target="_blank" align="left">
-  <img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid2.png" alt="Get it on IzzyOnDroid" height="29" />
-</a>
+# OffWiki Android
 
-# Kiwix Android
+OffWiki is an offline reader for Web content, based on [Kiwix](https://github.com/kiwix/kiwix-android). It's primarily designed to make [Wikipedia](https://www.wikipedia.org/) available offline. It reads archives in the [ZIM](https://openzim.org) file format, a highly compressed open format with additional metadata.
 
-Kiwix is an offline reader for Web content, primarily designed to make [Wikipedia](https://www.wikipedia.org/) available offline. It reads archives in the [ZIM](https://openzim.org) file format, a highly compressed open format with additional metadata.
-This is the Android version of Kiwix, with [support versions ranging from 7.1 to 15](https://github.com/kiwix/kiwix-android/blob/main/buildSrc/src/main/kotlin/Config.kt). The app is written in [Kotlin](https://kotlinlang.org/).
+This is the Android version of OffWiki, with [support versions ranging from 7.1 to 15](https://github.com/kiwix/kiwix-android/blob/main/buildSrc/src/main/kotlin/Config.kt). The app is written in [Kotlin](https://kotlinlang.org/).
 
-[![Build Status](https://github.com/kiwix/kiwix-android/workflows/CI/badge.svg?query=branch%3Amain+workflow%3ANightly)](https://github.com/kiwix/kiwix-android/actions?query=workflow%3ACI+branch%3Amain)
-[![Nightly](https://github.com/kiwix/kiwix-android/actions/workflows/nightly.yml/badge.svg)](https://github.com/kiwix/kiwix-android/actions/workflows/nightly.yml)
-[![codecov](https://codecov.io/gh/kiwix/kiwix-android/branch/main/graph/badge.svg)](https://codecov.io/gh/kiwix/kiwix-android)
-[![CodeFactor](https://www.codefactor.io/repository/github/kiwix/kiwix-android/badge)](https://www.codefactor.io/repository/github/kiwix/kiwix-android)
+**Maintainer:** Mohammad Parvin ([mparvin.me](https://mparvin.me))
+
+**Based on Kiwix Android** - Original project by the Kiwix team.
+
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Public Chat](https://img.shields.io/badge/public-chat-green)](https://chat.kiwix.org)
-[![Slack](https://img.shields.io/badge/Slack-chat-E01E5A)](https://kiwixoffline.slack.com)
 
 ## Important Notes
 
@@ -116,12 +108,11 @@ Before contributing check out the [CONTRIBUTION](https://github.com/kiwix/kiwix-
 
 ## Communication
 
-* [Email](mailto:contact+android@kiwix.org)
-* [Slack](https://kiwixoffline.slack.com): #android
-  channel [Get an invite](https://join.slack.com/t/kiwixoffline/shared_invite/zt-19s7tsi68-xlgHdmDr5c6MJ7uFmJuBkg)
+* [Email](mailto:m.parvin986@gmail.com)
+* [Website](https://mparvin.me)
+* [GitHub](https://github.com/mparvin)
 
-For more information, please refer to
-[https://wiki.kiwix.org/wiki/Communication](https://wiki.kiwix.org/wiki/Communication).
+For questions about this OffWiki Android project, please contact Mohammad Parvin.
 
 ## Support
 If you're enjoying using Kiwix, drop a ⭐️ on the repo!

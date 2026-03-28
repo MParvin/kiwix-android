@@ -87,10 +87,15 @@ jobs:
         APK_PATH="${{ steps.find_apk.outputs.APK_PATH }}"
         echo "🔍 Verifying APK: $APK_PATH"
         
-        # Check if APK is valid
-        if ! file "$APK_PATH" | grep -q "Android application package"; then
-          echo "❌ Invalid APK file"
-          file "$APK_PATH"
+        # APK is a zip archive; verify zip integrity first.
+        if ! unzip -tqq "$APK_PATH" >/dev/null 2>&1; then
+          echo "❌ Invalid APK file (zip integrity check failed)"
+          exit 1
+        fi
+
+        # Ensure core APK entry exists.
+        if ! unzip -l "$APK_PATH" | awk '{print $4}' | grep -qx "AndroidManifest.xml"; then
+          echo "❌ Invalid APK file (missing AndroidManifest.xml)"
           exit 1
         fi
         

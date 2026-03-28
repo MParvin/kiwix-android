@@ -69,10 +69,10 @@ android {
   // Added namespace in response to Gradle 8.0 and above.
   // This is now specified in the Gradle configuration instead of declaring
   // it directly in the AndroidManifest file.
-  namespace = "org.kiwix.kiwixmobile"
+  namespace = "me.mparvin.offwiki"
   defaultConfig {
-    resValue("string", "app_name", "Kiwix")
-    resValue("string", "app_search_string", "Search Kiwix")
+    resValue("string", "app_name", "OffWiki")
+    resValue("string", "app_search_string", "Search OffWiki")
     versionCode = "".getVersionCode()
     versionName = generateVersionName()
     manifestPlaceholders["permission"] = "android.permission.MANAGE_EXTERNAL_STORAGE"
