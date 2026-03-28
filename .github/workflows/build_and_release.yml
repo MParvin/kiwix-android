@@ -1,10 +1,13 @@
 name: Build and Release APK
 
-# Trigger only on tag pushes
+# Trigger on push to main branch
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - main
+  # push:
+  #   tags:
+  #     - '*'
 
 jobs:
   build-and-release:
