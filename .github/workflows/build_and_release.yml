@@ -56,14 +56,14 @@ jobs:
       run: |
         SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
         TAG_NAME="v$(date -u +'%Y%m%d')-${SHORT_SHA}"
-        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
         echo "🏷️ Generated tag: $TAG_NAME"
 
     # Create the git tag
     - name: Create git tag
       run: |
-        git tag "${{ steps.tag_name.outputs.TAG_NAME }}"
-        git push origin "${{ steps.tag_name.outputs.TAG_NAME }}"
+          git tag "${{ steps.tag_name.outputs.tag_name }}"
+          git push origin "${{ steps.tag_name.outputs.tag_name }}"
 
     # Find the built APK file
     - name: Find APK file
@@ -85,12 +85,12 @@ jobs:
     - name: Determine release type
       id: release_type
       run: |
-        TAG_NAME="${{ steps.tag_name.outputs.TAG_NAME }}"
+          TAG_NAME="${{ steps.tag_name.outputs.tag_name }}"
         if [[ "$TAG_NAME" =~ (alpha|beta|rc|pre|dev|snapshot) ]]; then
-          echo "PRERELEASE=true" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
           echo "📋 Detected pre-release tag: $TAG_NAME"
         else
-          echo "PRERELEASE=false" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
           echo "🚀 Detected stable release tag: $TAG_NAME"
         fi
 
@@ -124,10 +124,10 @@ jobs:
     - name: Create Release and Upload APK
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ steps.tag_name.outputs.TAG_NAME }}
-        name: Kiwix Android ${{ steps.tag_name.outputs.TAG_NAME }}
+          tag_name: ${{ steps.tag_name.outputs.tag_name }}
+          name: Kiwix Android ${{ steps.tag_name.outputs.tag_name }}
         body: |
-          ## Kiwix Android Release ${{ steps.tag_name.outputs.TAG_NAME }}
+            ## Kiwix Android Release ${{ steps.tag_name.outputs.tag_name }}
           
           ### 📥 Installation
           Download the APK file below and install it on your Android device.
@@ -139,16 +139,16 @@ jobs:
           
           ### 📊 Build Information
           - **Built from:** `${{ github.sha }}`
-          - **Build date:** ${{ steps.tag_name.outputs.TAG_NAME }}
+            - **Build date:** ${{ steps.tag_name.outputs.tag_name }}
           - **APK file:** `${{ steps.find_apk.outputs.APK_NAME }}`
           
           ### 🔄 Changes
-          - Automated build from tag ${{ steps.tag_name.outputs.TAG_NAME }}
+            - Automated build from tag ${{ steps.tag_name.outputs.tag_name }}
           
-          For detailed changes, see the [commit history](https://github.com/${{ github.repository }}/commits/${{ steps.tag_name.outputs.TAG_NAME }}).
+            For detailed changes, see the [commit history](https://github.com/${{ github.repository }}/commits/${{ steps.tag_name.outputs.tag_name }}).
         files: |
           ${{ steps.find_apk.outputs.APK_PATH }}
-        prerelease: ${{ steps.release_type.outputs.PRERELEASE }}
+          prerelease: ${{ steps.release_type.outputs.prerelease }}
         draft: false
         fail_on_unmatched_files: true
 
@@ -157,7 +157,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: failure()
       with:
-        name: build-logs-${{ steps.tag_name.outputs.TAG_NAME }}
+          name: build-logs-${{ steps.tag_name.outputs.tag_name }}
         path: |
           app/build/outputs/
           build/
