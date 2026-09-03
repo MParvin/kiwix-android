@@ -1,0 +1,110 @@
+name: Publish to CafeBazaar
+
+# Automatically publish every new version to the CafeBazaar store.
+#
+# Trigger strategy:
+#   * workflow_run - runs right after the existing "Build and Release APK"
+#     workflow finishes successfully on main. That workflow already produces a
+#     new version (date-based version code) on every push to main, so chaining
+#     off it means each new version is pushed to CafeBazaar automatically.
+#     (A plain `release`/tag trigger would NOT fire here, because the release is
+#     created with the default GITHUB_TOKEN and GitHub suppresses events raised
+#     by GITHUB_TOKEN to avoid recursive runs.)
+#   * workflow_dispatch - lets a maintainer publish on demand from the Actions
+#     tab, optionally overriding the target application id.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   CAFEBAZAAR_CLIENT_ID       OAuth client id from the CafeBazaar dev panel
+#   CAFEBAZAAR_CLIENT_SECRET   OAuth client secret
+#   CAFEBAZAAR_REFRESH_TOKEN   OAuth refresh token (access_type=offline)
+
+on:
+  workflow_run:
+    workflows: ["Build and Release APK"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: "CafeBazaar application id to publish to"
+        required: false
+        default: "org.kiwix.kiwixmobile"
+
+# Never run two CafeBazaar uploads at once; a queued run waits for the current
+# one instead of racing it.
+concurrency:
+  group: cafebazaar-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build and publish release APK
+    runs-on: ubuntu-latest
+    # For workflow_run, only proceed when the upstream build actually succeeded.
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Locate APK
+        id: find_apk
+        run: |
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" -type f | sort | head -1)
+          if [ -z "$APK_PATH" ] || [ ! -f "$APK_PATH" ]; then
+            echo "::error::No APK found in app/build/outputs/apk/release"
+            ls -la app/build/outputs/apk/release/ || echo "Release directory not found"
+            exit 1
+          fi
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "Found APK: $APK_PATH ($(du -h "$APK_PATH" | cut -f1))"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install uploader dependencies
+        run: pip install --upgrade requests
+
+      - name: Publish to CafeBazaar
+        env:
+          CAFEBAZAAR_CLIENT_ID: ${{ secrets.CAFEBAZAAR_CLIENT_ID }}
+          CAFEBAZAAR_CLIENT_SECRET: ${{ secrets.CAFEBAZAAR_CLIENT_SECRET }}
+          CAFEBAZAAR_REFRESH_TOKEN: ${{ secrets.CAFEBAZAAR_REFRESH_TOKEN }}
+          PACKAGE_NAME: ${{ github.event.inputs.package_name }}
+        run: |
+          PACKAGE="${PACKAGE_NAME:-org.kiwix.kiwixmobile}"
+          echo "Publishing $PACKAGE to CafeBazaar"
+          python .github/scripts/cafebazaar_upload.py \
+            --package "$PACKAGE" \
+            --file "${{ steps.find_apk.outputs.apk_path }}"
