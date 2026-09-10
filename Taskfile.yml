@@ -1,0 +1,214 @@
+version: '3'
+
+vars:
+  IMAGE: mparvin/android-builder
+  VARIANT: api34-35-36-j17
+  DIST: dist
+  APK_DEBUG: dist/offwiki-debug.apk
+  APK_RELEASE: dist/offwiki-release.apk
+  APK_STANDALONE: dist/offwiki-standalone.apk
+  PKG_DEBUG: org.kiwix.kiwixmobile
+  MAIN_ACTIVITY: org.kiwix.kiwixmobile.main.KiwixMainActivity
+  # Host-side mirror when services.gradle.org / GitHub downloads are flaky
+  GRADLE_MIRROR: https://mirrors.cloud.tencent.com/gradle
+
+tasks:
+  default:
+    desc: Build release APK
+    cmds:
+      - task: build
+
+  docker:pull:
+    desc: Pull the Android builder image (falls back to a local copy)
+    cmds:
+      - |
+        if docker pull "{{.IMAGE}}:{{.VARIANT}}"; then
+          exit 0
+        fi
+        if docker image inspect "{{.IMAGE}}:{{.VARIANT}}" >/dev/null 2>&1; then
+          echo "Registry pull failed; using local {{.IMAGE}}:{{.VARIANT}}"
+          exit 0
+        fi
+        echo "Image {{.IMAGE}}:{{.VARIANT}} not found locally or on the registry"
+        exit 1
+
+  gradle:ensure:
+    desc: Ensure the Gradle wrapper distribution is cached on the host
+    internal: true
+    cmds:
+      - GRADLE_MIRROR={{.GRADLE_MIRROR}} bash contrib/ensure-gradle-dist.sh
+
+  docker-run:
+    internal: true
+    deps:
+      - gradle:ensure
+    cmds:
+      - |
+        # --network host: rootless Docker bridge cannot reach HTTPS (connection refused).
+        # Host DNS mount keeps Shecan/local resolvers instead of Docker's 1.1.1.1/8.8.8.8.
+        # Only forward non-empty signing/version env vars so Gradle can use its built-in defaults
+        # (empty -e VAR= makes System.getenv return "" and skips the ?: "000000" fallbacks).
+        EXTRA_ENV=()
+        for var in KEY_STORE_PASSWORD KEY_ALIAS KEY_PASSWORD KIWIX_ANDROID_RELEASE_DATE APK_BUILD TAG; do
+          eval "val=\${$var-}"
+          if [ -n "$val" ]; then
+            EXTRA_ENV+=(-e "$var=$val")
+          fi
+        done
+        docker run --rm \
+          --network host \
+          -v "$PWD:/project" \
+          -v "${HOME}/.gradle:/home/android/.gradle" \
+          -v /etc/resolv.conf:/etc/resolv.conf:ro \
+          -w /project \
+          -e GRADLE_USER_HOME=/home/android/.gradle \
+          "${EXTRA_ENV[@]}" \
+          "{{.IMAGE}}:{{.VARIANT}}" \
+          {{.CLI_ARGS}}
+
+  build:
+    desc: Build release APK into dist/
+    cmds:
+      - mkdir -p {{.DIST}}
+      - task: docker-run
+        vars:
+          CLI_ARGS: './gradlew assembleRelease --no-daemon -q'
+      - |
+        APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+        if [ -z "$APK" ]; then
+          echo "Release APK not found"
+          exit 1
+        fi
+        cp "$APK" "{{.APK_RELEASE}}"
+        echo "Built {{.APK_RELEASE}}"
+
+  build:debug:
+    desc: Build debug-signed APK into dist/ (recommended for device sideload)
+    cmds:
+      - mkdir -p {{.DIST}}
+      - task: docker-run
+        vars:
+          CLI_ARGS: './gradlew assembleDebug --no-daemon -q'
+      - |
+        APK=$(find app/build/outputs/apk/debug -name '*.apk' | head -1)
+        if [ -z "$APK" ]; then
+          echo "Debug APK not found"
+          exit 1
+        fi
+        cp "$APK" "{{.APK_DEBUG}}"
+        echo "Built {{.APK_DEBUG}} (debug-signed — use for sideload)"
+
+  build:standalone:
+    desc: Build standalone (full-version) release APK into dist/
+    cmds:
+      - mkdir -p {{.DIST}}
+      - task: docker-run
+        vars:
+          CLI_ARGS: './gradlew assembleStandalone --no-daemon -q'
+      - |
+        APK=$(find app/build/outputs/apk/standalone -name '*.apk' | head -1)
+        if [ -z "$APK" ]; then
+          echo "Standalone APK not found"
+          exit 1
+        fi
+        cp "$APK" "{{.APK_STANDALONE}}"
+        echo "Built {{.APK_STANDALONE}}"
+
+  install:debug:
+    desc: Install and launch the debug APK on a connected device/emulator
+    cmds:
+      - adb wait-for-device
+      - adb install -r {{.APK_DEBUG}}
+      - adb shell am start -n {{.PKG_DEBUG}}/{{.MAIN_ACTIVITY}}
+    preconditions:
+      - sh: command -v adb >/dev/null
+        msg: adb is required (install Android platform-tools)
+      - sh: test -f {{.APK_DEBUG}}
+        msg: "{{.APK_DEBUG}} not found; run go-task build:debug first"
+      - sh: adb devices | grep -E '\tdevice$' >/dev/null
+        msg: No Android device/emulator connected (enable USB debugging)
+
+  run:
+    desc: Build debug APK, install on a connected device, and launch
+    cmds:
+      - task: build:debug
+      - task: install:debug
+    preconditions:
+      - sh: command -v adb >/dev/null
+        msg: adb is required (install Android platform-tools)
+      - sh: adb devices | grep -E '\tdevice$' >/dev/null
+        msg: No Android device/emulator connected (enable USB debugging)
+
+  lint:
+    desc: Run ktlint, detekt, and Android Lint (same as pre-commit hook)
+    cmds:
+      - task: docker-run
+        vars:
+          CLI_ARGS: './gradlew ktlintCheck detektDebug detektCustomExampleDebug app:lintDebug custom:lintCustomexampleDebug --no-daemon -q'
+
+  fmt:
+    desc: Auto-format Kotlin with ktlintFormat
+    cmds:
+      - task: docker-run
+        vars:
+          CLI_ARGS: './gradlew ktlintFormat --no-daemon -q'
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - task: docker-run
+        vars:
+          CLI_ARGS: './gradlew testDebugUnitTest --no-daemon -q'
+
+  ci:
+    desc: Pull builder image, run unit tests and lint
+    cmds:
+      - task: docker:pull
+      - task: test
+      - task: lint
+
+  release:notes:
+    desc: Generate release-notes.md from git history since the previous tag
+    cmds:
+      - |
+        PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        if [ -n "$PREV" ]; then
+          git log --pretty=format:'- %s' "$PREV"..HEAD > release-notes.md
+        else
+          git log --pretty=format:'- %s' > release-notes.md
+        fi
+
+  release:github:
+    desc: Create a GitHub Release and attach the release APK
+    cmds:
+      - |
+        TAG="${GITHUB_REF_NAME:?Set GITHUB_REF_NAME}"
+        TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:?Set GH_TOKEN or GITHUB_TOKEN}}"
+        export GH_TOKEN="$TOKEN"
+        gh release create "$TAG" {{.APK_RELEASE}} \
+          --title "OffWiki ${TAG}" \
+          --notes-file release-notes.md \
+          --generate-notes
+    preconditions:
+      - sh: command -v gh >/dev/null
+        msg: GitHub CLI (gh) is required
+      - sh: test -f {{.APK_RELEASE}}
+        msg: "{{.APK_RELEASE}} not found; run go-task build first"
+      - sh: test -f release-notes.md
+        msg: release-notes.md not found; run go-task release:notes first
+
+  release:
+    desc: Build release APK, generate notes, and publish a GitHub Release
+    cmds:
+      - task: build
+      - task: release:notes
+      - task: release:github
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf {{.DIST}} app/build build .gradle
+      - task: docker-run
+        vars:
+          CLI_ARGS: './gradlew clean --no-daemon -q'
+        ignore_error: true

@@ -10,8 +10,6 @@
   <string name="menu_search_in_text">Знайсьці на старонцы</string>
   <string name="bookmarks">Закладкі</string>
   <string name="menu_random_article">Выпадковы артыкул</string>
-  <string name="menu_full_screen">На ўвесь экран</string>
-  <string name="menu_exit_full_screen">Выйсьці з рэжыму поўнага экрану</string>
   <string name="menu_read_aloud">Чытаць уголас</string>
   <string name="menu_read_aloud_stop">Спыніць чытаньне ўголас</string>
   <string name="menu_support_kiwix">Падтрымаць Kiwix</string>
